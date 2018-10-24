@@ -1,22 +1,38 @@
 const Router = require('koa-router');
+const Organization = require('../models/organization');
 
 let router = new Router();
-//const mysql = require('../libs/database');
-//const Organization = require('../models/organization');
 
-router.get('/', async (ctx, next) => {
+router
+  .get('/', async (ctx) => {
    ctx.status = 200;
    ctx.body = 'It works';
   })
   .prefix('/organizations')
-  .post('/add', async (ctx, next) => {
-    ctx.status = 502;
-    ctx.body = 'Not Implemented'
+  .post('/add', async (ctx) => {
+    const data = ctx.request.body;
+
+    const o = new Organization();
+    await o.create(data);
+
+    ctx.body = {};
   })
-  .get('/get/:name', async (ctx, next) => {
-    console.log(ctx);
-    ctx.status = 502;
-    ctx.body = 'Not Implemented'
+  .param(':name', async(name, ctx, next) => {
+    await next();
+  })
+  .param(':page', async(page, ctx, next) => {
+    await next();
+  })
+  .get('/get/:name/:page*', async (ctx) => {
+    const o = new Organization();
+    const list = await o.getByName(ctx.params.name, ctx.params.page);
+    if (list.length) {
+      ctx.status = 200;
+      ctx.body = list;
+    } else {
+      ctx.status = 404;
+      ctx.body = {};
+    }
   });
 
 module.exports = router;
