@@ -1,9 +1,8 @@
 const config = require('config');
 
-// long stack trace (+clarify from co) if needed
-// if (process.env.TRACE) {
-//   require('./libs/trace');
-// }
+// process.on('unhandledRejection', (reason, p) => {
+//   console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+// });
 
 const app = require('./app');
 app.listen(config.get('port'));

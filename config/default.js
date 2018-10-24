@@ -1,10 +1,12 @@
 module.exports = {
   db: {
     host: 'localhost',
-    port: '',
     name: 'test_organizations',
-    user: '',
-    pass: ''
+    user: 'root',
+    pass: 'root'
   },
-  port: 8080
+  port: 8080,
+  app: {
+    perPage: 100
+  }
 };
