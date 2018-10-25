@@ -8,7 +8,7 @@ class Organization {
     this.tableRelations = 'relations';
   }
 
-  async create(data, ctx) {
+  async create(data) {
     let self = this;
 
     async function saveTree(org, parentId) {

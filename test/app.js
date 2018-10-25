@@ -14,6 +14,7 @@ const apiUrl = 'http://localhost:' + config.get('port');
 const fixtureOrg = require('./fixture/org');
 const fixtureOrgList = require('./fixture/org_list');
 const fixtureResult = require('./fixture/org_result');
+const fixtureRelations = require('./fixture/org_relations');
 
 describe('organization API', async () => {
 
@@ -53,30 +54,18 @@ describe('organization API', async () => {
     });
 
     it('should not create duplicates of organization', async () => {
-      await Promise.all([await request({
-        method: 'post',
-        uri: apiUrl + '/organizations/add',
-        json: true,
-        body: fixtureOrg
-      }),
       await request({
         method: 'post',
         uri: apiUrl + '/organizations/add',
         json: true,
         body: fixtureOrg
-      })]);
-      // await request({
-      //   method: 'post',
-      //   uri: apiUrl + '/organizations/add',
-      //   json: true,
-      //   body: fixtureOrg
-      // });
-      // await request({
-      //   method: 'post',
-      //   uri: apiUrl + '/organizations/add',
-      //   json: true,
-      //   body: fixtureOrg
-      // });
+      });
+      await request({
+        method: 'post',
+        uri: apiUrl + '/organizations/add',
+        json: true,
+        body: fixtureOrg
+      });
 
       let rows = await db.query('SELECT name FROM organizations');
       assert.equal(rows[0].length, fixtureOrgList.length);
@@ -86,13 +75,31 @@ describe('organization API', async () => {
 
     });
 
-    it.skip('should be correct relations in DB', async() => {
+    it('should be correct relations in DB', async() => {
       await request({
         method: 'post',
         uri: apiUrl + '/organizations/add',
         json: true,
         body: fixtureOrg
       });
+
+      let rows = await db.query('SELECT o1.name, o2.name as parent_name FROM relations r INNER JOIN organizations o1 ON r.org_id=o1.id INNER JOIN organizations o2 ON r.parent_id=o2.id');
+      rows = rows[0].map(item => {return [item.name, item.parent_name]});
+
+      function sort(a, b) {
+        if (a[0] > b[0]) return 1;
+        if (a[0] < b[0]) return -1;
+
+        if (a[1] > b[1]) return 1;
+        if (a[1] < b[1]) return -1;
+
+        return 0;
+      }
+
+      fixtureRelations.sort(sort);
+      rows.sort(sort);
+
+      assert.deepStrictEqual(rows, fixtureRelations);
     });
   });
 
