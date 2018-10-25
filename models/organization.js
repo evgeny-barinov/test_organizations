@@ -18,13 +18,17 @@ class Organization {
       try {
 
         await conn.beginTransaction();
-        const item = await conn.query(`SELECT id FROM ${self.table} WHERE name=? LIMIT 1`, [org.org_name]);
 
-        if (item[0].length) {
-          insertId = item[0][0].id;
-        } else {
+        try {
           const r = await conn.query(`INSERT INTO ${self.table} SET ?`, {name: org.org_name});
           insertId = r[0].insertId;
+        } catch (e) {
+          if (e.code === 'ER_DUP_ENTRY') {
+            const item = await conn.query(`SELECT id FROM ${self.table} WHERE name=? LIMIT 1`, [org.org_name]);
+            insertId = item[0][0].id;
+          } else {
+            throw e;
+          }
         }
 
         if (parentId) {
@@ -37,6 +41,7 @@ class Organization {
         await conn.commit();
 
       } catch (e) {
+
         await conn.rollback();
         conn.release();
         throw e;

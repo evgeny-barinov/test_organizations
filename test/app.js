@@ -53,18 +53,30 @@ describe('organization API', async () => {
     });
 
     it('should not create duplicates of organization', async () => {
+      await Promise.all([await request({
+        method: 'post',
+        uri: apiUrl + '/organizations/add',
+        json: true,
+        body: fixtureOrg
+      }),
       await request({
         method: 'post',
         uri: apiUrl + '/organizations/add',
         json: true,
         body: fixtureOrg
-      });
-      await request({
-        method: 'post',
-        uri: apiUrl + '/organizations/add',
-        json: true,
-        body: fixtureOrg
-      });
+      })]);
+      // await request({
+      //   method: 'post',
+      //   uri: apiUrl + '/organizations/add',
+      //   json: true,
+      //   body: fixtureOrg
+      // });
+      // await request({
+      //   method: 'post',
+      //   uri: apiUrl + '/organizations/add',
+      //   json: true,
+      //   body: fixtureOrg
+      // });
 
       let rows = await db.query('SELECT name FROM organizations');
       assert.equal(rows[0].length, fixtureOrgList.length);
