@@ -33,11 +33,11 @@ describe('organization API', async () => {
     await db.query("DELETE FROM organizations");
   });
 
-  describe('POST /organizations/add', async () => {
+  describe('POST /organization', async () => {
     it('should add an organizations and data in DB should be correct after that', async () => {
       let res = await request({
         method: 'post',
-        uri: apiUrl + '/organizations/add',
+        uri: apiUrl + '/organization/',
         json: true,
         body: fixtureOrg
       });
@@ -56,13 +56,13 @@ describe('organization API', async () => {
     it('should not create duplicates of organization', async () => {
       await request({
         method: 'post',
-        uri: apiUrl + '/organizations/add',
+        uri: apiUrl + '/organization',
         json: true,
         body: fixtureOrg
       });
       await request({
         method: 'post',
-        uri: apiUrl + '/organizations/add',
+        uri: apiUrl + '/organization',
         json: true,
         body: fixtureOrg
       });
@@ -78,7 +78,7 @@ describe('organization API', async () => {
     it('should be correct relations in DB', async() => {
       await request({
         method: 'post',
-        uri: apiUrl + '/organizations/add',
+        uri: apiUrl + '/organization',
         json: true,
         body: fixtureOrg
       });
@@ -103,7 +103,7 @@ describe('organization API', async () => {
     });
   });
 
-  describe('GET /organizations/get/:name/:page', async () => {
+  describe('GET /organization/:name/:page', async () => {
       beforeEach(async () => {
         const org = new Organization();
         await org.create(fixtureOrg);
@@ -112,7 +112,7 @@ describe('organization API', async () => {
         //1st page
         let res = await request({
           method: 'get',
-          uri: apiUrl + '/organizations/get/Black Banana',
+          uri: apiUrl + '/organization/Black Banana',
           json: true
         });
 
@@ -121,7 +121,7 @@ describe('organization API', async () => {
         //2nd page
         res = await request({
           method: 'get',
-          uri: apiUrl + '/organizations/get/Black Banana/2',
+          uri: apiUrl + '/organization/Black Banana/2',
           json: true
         });
         assert.deepStrictEqual(res.body, fixtureResult[1]);
@@ -129,16 +129,24 @@ describe('organization API', async () => {
         //3rd page
         res = await request({
           method: 'get',
-          uri: apiUrl + '/organizations/get/Black Banana/3',
+          uri: apiUrl + '/organization/Black Banana/3',
           json: true
         });
         assert.deepStrictEqual(res.body, fixtureResult[2]);
+
+        //4th page, no data
+        res = await request({
+          method: 'get',
+          uri: apiUrl + '/organization/Black Banana/4',
+          json: true
+        });
+        assert.deepStrictEqual(res.body, {});
 
       });
     it('should get 404 if not found', async () => {
       let res = await request({
         method: 'get',
-        uri: apiUrl + '/organizations/get/UnknownOrganization',
+        uri: apiUrl + '/organization/UnknownOrganization',
         json: true
       });
 

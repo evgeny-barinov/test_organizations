@@ -8,8 +8,8 @@ router
    ctx.status = 200;
    ctx.body = 'It works';
   })
-  .prefix('/organizations')
-  .post('/add', async (ctx) => {
+  .prefix('/organization')
+  .post('/', async (ctx) => {
     const data = ctx.request.body;
 
     const o = new Organization();
@@ -17,13 +17,7 @@ router
 
     ctx.body = {};
   })
-  .param(':name', async(name, ctx, next) => {
-    await next();
-  })
-  .param(':page', async(page, ctx, next) => {
-    await next();
-  })
-  .get('/get/:name/:page*', async (ctx) => {
+  .get('/:name/:page*', async (ctx) => {
     const o = new Organization();
     const list = await o.getByName(ctx.params.name, ctx.params.page);
     if (list.length) {
