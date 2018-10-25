@@ -8,45 +8,52 @@ class Organization {
     this.tableRelations = 'relations';
   }
 
-  async create(data) {
-    const conn = await db.getConnection();
+  async create(data, ctx) {
     let self = this;
 
     async function saveTree(org, parentId) {
-      const item = await conn.query(`SELECT id FROM ${self.table} WHERE name=? LIMIT 1`, [org.org_name]);
-
+      const conn = await db.getConnection();
       let insertId;
-      if (item[0].length) {
-        insertId = item[0][0].id;
-      } else {
-        const r = await conn.query(`INSERT INTO ${self.table} SET ?`, {name: org.org_name});
-        insertId = r[0].insertId;
+
+      try {
+
+        await conn.beginTransaction();
+        const item = await conn.query(`SELECT id FROM ${self.table} WHERE name=? LIMIT 1`, [org.org_name]);
+
+        if (item[0].length) {
+          insertId = item[0][0].id;
+        } else {
+          const r = await conn.query(`INSERT INTO ${self.table} SET ?`, {name: org.org_name});
+          insertId = r[0].insertId;
+        }
+
+        if (parentId) {
+          await conn.query(
+            `INSERT IGNORE INTO ${self.tableRelations} SET ?`,
+            {org_id: insertId, parent_id: parentId}
+          );
+        }
+
+        await conn.commit();
+
+      } catch (e) {
+        await conn.rollback();
+        conn.release();
+        throw e;
+
       }
 
-      if (parentId) {
-        await conn.query(
-          `INSERT IGNORE INTO ${self.tableRelations} SET ?`,
-          {org_id: insertId, parent_id: parentId}
-        );
-      }
 
       if (org.daughters) {
         for (let item of org.daughters) {
           await saveTree(item, insertId);
         }
       }
+
+      conn.release();
     }
 
-    await conn.beginTransaction();
-    try {
-      await saveTree(data, null);
-    } catch (e) {
-      await conn.rollback();
-      throw e;
-    }
-    await conn.commit();
-
-    conn.release();
+    await saveTree(data, null);
   }
 
   async getByName(name, page = 1) {
